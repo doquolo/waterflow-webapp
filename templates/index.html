@@ -5,9 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ú</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <script>
+      const checker = () => {
+        fetch("/retriveLinkedMachine", {
+          method: "POST",
+          body: JSON.stringify({
+            user: username,
+            password: password,
+          }),
+        })
+          .then((request) => {
+            console.log(request.status);
+            return request.json();
+          })
+          .then((request) => {
+            const data = request;
+            if (data.state === "authenticate") {
+              alert("Tên đăng nhập hoặc mật khẩu sai!");
+              username = prompt("Nhập lại username:");
+              password = prompt("Nhập lại password");
+              checker();
+            } else if (data.state === "notfound") {
+              state = true;
+              return true;
+            } else {
+              state = true;
+              isMachineAvail = true;
+              data_json = request;
+              return true;
+            }
+          })
+          .then((repeat) => {
+            if (repeat) {
+              console.log(data, state, isMachineAvail);
+              if (state && !isMachineAvail) {
+                alert("Không có thiết bị nào liên kết với tài khoản của bạn!");
+              } else if (state) {
+                alert("Đăng nhập thành công!");
+                const welcome_text = document.querySelector("#welcome_text");
+                const dropdown = document.querySelector("#devices");
+
+                welcome_text.textContent = `Xin chào, ${username}`;
+                for (let i in data_json.data.machines) {
+                  dropdown.innerHTML += 
+                    `<option value="${data_json.data.machines[i]}">${data_json.data.machines[i]}</option>`;
+                }
+              }
+            }
+          });
+      };
+    </script>
+    <script>
+      // login
+      let username = prompt("Username");
+      let password = prompt("Password");
+
+      let state = false;
+      let isMachineAvail = false;
+      let data_json = null;
+
+      checker();
+    </script>
+    <style>
+      .form {
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
   </head>
   <body>
-    <form onclick="return false;" id="form">
+    <form onclick="return false;" id="form" class="form">
+      <label for="welcome" id="welcome_text"></label>
+      <label for="device_text">Chọn thiết bị:</label>
+      <select name="devices" id="devices">
+        <option value="-">-</option>
+      </select>
       <label for="date">Lấy dữ liệu của ngày:</label>
       <input type="date" id="datetofetch" name="date" />
       <input type="submit" value="Lấy dữ liệu" onclick="handleDatepicker()" />
@@ -45,9 +117,9 @@
       return tienNuoc;
     }
 
-    const getData = (date) => {
+    const getData = (date, device_id) => {
       console.log(date);
-      fetch(`/getdata?date=${date}`)
+      fetch(`/getdata?date=${date}&deviceid=${device_id}`)
         .then((data) => {
           return data.json();
         })
@@ -64,7 +136,7 @@
             var date = new Date(i * 1000); // sec to ms
             xValues.push(`${date.getHours()}:${date.getMinutes()}`);
             y1Values.push(Number(data[i]["waterFlowed"]) / 1000);
-            y2Values.push(Number(data[i]["waterSpeed"]) /1000);
+            y2Values.push(Number(data[i]["waterSpeed"]) / 1000);
           }
           // fill in info
           const waterused = y1Values.at(-1);
@@ -74,7 +146,9 @@
 
           document.querySelector(
             "#estimated"
-          ).textContent = `Tiền nước tạm tính trong ngày: ${tinhTienNuoc(waterused)} (đồng)`;
+          ).textContent = `Tiền nước tạm tính trong ngày: ${tinhTienNuoc(
+            waterused
+          )} (đồng)`;
           // make chart
           new Chart("myChart", {
             type: "line",
@@ -142,13 +216,14 @@
 
     const handleDatepicker = () => {
       date_elem = document.querySelector("#datetofetch");
-      if (date_elem.value === "") alert("Chọn ngày trước khi lấy dữ liệu!");
+      let device = document.querySelector("#devices").value;
+      if (device == "-") alert("Chọn thiết bị để xem dữ liệu!");
+      else if (date_elem.value === "")
+        alert("Chọn ngày trước khi lấy dữ liệu!");
       else {
         const date = new Date(date_elem.value);
-        getData(formatDate(date));
+        getData(formatDate(date), device);
       }
     };
-
-    // getData();
   </script>
 </html>
