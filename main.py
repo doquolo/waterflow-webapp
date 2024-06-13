@@ -1,58 +1,38 @@
 from flask import Flask, render_template, request
 import firebase_admin
-from firebase_admin import db
+from firebase_admin import db, firestore
 import json
 
 # init firebase
 databaseURL = "https://waterflow-583e8-default-rtdb.asia-southeast1.firebasedatabase.app/"
 cred_obj = firebase_admin.credentials.Certificate("creds.json")
 default_app = firebase_admin.initialize_app(cred_obj, {"databaseURL": databaseURL})
+firestore = firestore.client()
 
 # init flask
 app = Flask(__name__)
 
-def authenticateUser(username, password):
-    # 1 - success; 2 - wrong password; 3 - user not found
-    # TODO: implement a function that verify user cred with firebase db
-    # placeholder
-
-    data = None
-    with open("user.json", "r", encoding="UTF-8") as file:
-        data = json.loads(file.read())
-
-    try:
-        if (data[username] == password):
-            return 1
-        else:
-            return 2
-    except Exception:
-        return 3
-
-
-@app.route("/retriveLinkedMachine", methods=["POST"])
-def retriveLinkedMachine():
+@app.route("/getUserData", methods=["POST"])
+def getUserData():
 
     jsondata = json.loads(request.data)
-
-    print(jsondata)
 
     username = jsondata["user"]
     password = jsondata["password"]
 
-    print(username)
-    print(password)
-
-
-    data = None
-    with open("linked_machine.json", "r", encoding="UTF-8") as file:
-        data = json.loads(file.read())
-        if (authenticateUser(username, password) not in (2, 3)):
-            if (username in data.keys()):
-                return {"state": "found", "data" : data[username]}
-            return {"state": "notfound"}
-        return {"state": "authenticate"}
-
-
+    try:
+        user = firestore.collection("users").document(str(username)).get()
+        user = user.to_dict()
+        if (user == None):
+            return {"state": "authenticate"}
+        elif (user["password"] == str(password)):
+            device_list = []
+            for device in user["devices"]:
+                device_list.append(device)
+            if (len(device_list) == 0): return {"state": "notfound"}  
+            return {"state": "found", "data": {"machines": device_list}}
+    except Exception as e:
+        return {"e": e}
 
 @app.route("/")
 def home():
@@ -72,4 +52,11 @@ def getdata():
     else:
         return {"error": 'true', "reason": 'date not exist'}
 
+@app.route("/testDB")
+def testDB():
+    users = firestore.collection("users").document("noc").get()
+    return users.to_dict()
+
 app.run("0.0.0.0", debug=True)
+
+
