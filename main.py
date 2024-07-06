@@ -27,16 +27,18 @@ def getUserData():
     try:
         user = firestore.collection("users").document(str(username)).get()
         user = user.to_dict()
-        if (user != None):
-            isPasswordCorrect = hasher.verify(user["password"], password)
-        elif (user == None or not isPasswordCorrect):
-            return {"state": "authenticate"}
-        elif (isPasswordCorrect):
-            device_list = []
-            for device in user["devices"]:
-                device_list.append(device)
-            if (len(device_list) == 0): return {"state": "notfound"}  
-            return {"state": "found", "data": {"machines": device_list}}
+        if (user == None): return {"state": "authenticate"}
+        else:
+            try:
+                isPasswordCorrect = hasher.verify(user["password"], password)
+                if (isPasswordCorrect):
+                    device_list = []
+                    for device in user["devices"]:
+                        device_list.append(device)
+                    if (len(device_list) == 0): return {"state": "notfound"}  
+                    return {"state": "found", "data": {"machines": device_list}}
+            except Exception as e:
+                return {"state": "authenticate"}
     except Exception as e:
         return {"e": e}
 
