@@ -26,7 +26,7 @@
       <button class="w3-bar-item w3-button tablink" onclick="openTab(event, 'monthview')">Xem tháng</button>
     </div>
   </div>
-  <div id="dateview" class="w3-container city">
+  <div id="dateview" class="w3-container tab">
     <form onclick="return false;" id="datepicker" class="form" style="width: 100%;">
       <div style="display: flex; flex-direction: column; align-items: center;">
         <div class="datepicker">
@@ -37,19 +37,39 @@
             <input type="number" id="numyear" name="year" min="1900" max="3000" class="w3-button">
           </div>
         </div>
-        <input type="submit" value="Lấy dữ liệu" onclick="handleDatepicker()" class="w3-button" style="width: 30vw; border: 1px solid black;"/>
+        <input type="submit" value="Lấy dữ liệu" onclick="handleDatepicker()" class="w3-button"
+        style="width: 30vw; border: 1px solid black;" />
+        <div class="data" id="data">
+          <div id="waterused"></div>
+          <div id="estimated"></div>
+        </div>
       </div>
       <div class="container">
+        <canvas id="dateChart" style="width: 100%; max-width: 600px; height: 50vh"></canvas>
+      </form>
+  </div>
+</div>
+<div id="monthview" class="w3-container tab" style="display: none;">
+    <form onclick="return false;" id="datepicker" class="form" style="width: 100%;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div class="datepicker">
+          <label for="date">Lấy dữ liệu của tháng:</label>
+          <div class="date_container" id="monthPicker">
+            <input type="number" id="nummonth" name="month" min="1" max="12" class="w3-button">
+            <input type="number" id="numyear" name="year" min="1900" max="3000" class="w3-button">
+          </div>
+        </div>
+        <input type="submit" value="Lấy dữ liệu" onclick="handleMonthPicker()" class="w3-button"
+        style="width: 30vw; border: 1px solid black;" />
+        <div class="data" id="monthdata">
+          <div id="waterused"></div>
+          <div id="estimated"></div>
+        </div>
+      </div>
+      <div class="container">
+        <canvas id="monthChart" style="width: 100%; max-width: 600px; height: 50vh"></canvas>
+      </div>
     </form>
-    <canvas id="myChart" style="width: 100%; max-width: 600px; height: 50vh"></canvas>
-    <div class="data" id="data">
-      <div id="waterused"></div>
-      <div id="estimated"></div>
-    </div>
-  </div>
-  </div>
-  <div id="monthview" class="w3-container city" style="display: none;">
-    <h1>monthview-placeholder</h1>
   </div>
 </body>
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>

@@ -62,6 +62,21 @@ def getdata():
     except:
         return {"error": 'true', "reason": 'date not exist'}
 
+@app.route("/getMonthData")
+def getMonthData():
+    timestamp = request.args.get('date')
+    month = timestamp[0:2]
+    year = timestamp[2:6]
+    device_id = request.args.get('deviceid')
+    ref_path = f"/{device_id}/{int(year)}/{int(month)}/"
+    try:
+        ref = db.reference(ref_path)
+        data = ref.get()
+        if (data == None): raise ValueError
+        return data
+    except:
+        return {"error": 'true', "reason": 'date not exist'}
+
 if __name__ == "__main__":
     app.run("0.0.0.0", debug=True)
 

@@ -1,6 +1,6 @@
 function openTab(evt, tabName) {
     var i, x, tablinks;
-    x = document.getElementsByClassName("city");
+    x = document.getElementsByClassName("tab");
     for (i = 0; i < x.length; i++) {
       x[i].style.display = "none";
     }
