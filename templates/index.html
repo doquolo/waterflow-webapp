@@ -1,229 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WaterFlow | Home</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-    <script>
-      const checker = () => {
-        fetch("/getUserData", {
-          method: "POST",
-          body: JSON.stringify({
-            user: username,
-            password: password,
-          }),
-        })
-          .then((request) => {
-            console.log(request.status);
-            return request.json();
-          })
-          .then((request) => {
-            const data = request;
-            if (data.state === "authenticate") {
-              alert("Tên đăng nhập hoặc mật khẩu sai!");
-              username = prompt("Nhập lại username:");
-              password = prompt("Nhập lại password");
-              checker();
-            } else if (data.state === "notfound") {
-              state = true;
-              return true;
-            } else {
-              state = true;
-              isMachineAvail = true;
-              data_json = request;
-              return true;
-            }
-          })
-          .then((repeat) => {
-            if (repeat) {
-              console.log(data, state, isMachineAvail);
-              if (state && !isMachineAvail) {
-                alert("Không có thiết bị nào liên kết với tài khoản của bạn!");
-              } else if (state) {
-                alert("Đăng nhập thành công!");
-                const welcome_text = document.querySelector("#welcome_text");
-                const dropdown = document.querySelector("#devices");
 
-                welcome_text.textContent = `Xin chào, ${username}`;
-                for (let i in data_json.data.machines) {
-                  dropdown.innerHTML += 
-                    `<option value="${data_json.data.machines[i]}">${data_json.data.machines[i]}</option>`;
-                }
-              }
-            }
-          });
-      };
-    </script>
-    <script>
-      // login
-      let username = prompt("Username");
-      let password = prompt("Password");
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WaterFlow | Home</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/tabbed-home.js') }}"></script>
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href=" {{ url_for('static', filename='styles/home.css') }} ">
+</head>
 
-      let state = false;
-      let isMachineAvail = false;
-      let data_json = null;
-
-      checker();
-    </script>
-    <style>
-      .form {
-        display: flex;
-        flex-direction: column;
-      }
-    </style>
-  </head>
-  <body>
-    <form onclick="return false;" id="form" class="form">
-      <label for="welcome" id="welcome_text"></label>
+<body>
+  <div class="w3-bar w3-black">
+    <p id="welcome_text"></p>
+    <form onclick="return false;" id="form" class="form" style="align-items: center;">
       <label for="device_text">Chọn thiết bị:</label>
-      <select name="devices" id="devices">
+      <select name="devices" id="devices" class="w3-button w3-red">
         <option value="-">-</option>
       </select>
-      <label for="date">Lấy dữ liệu của ngày:</label>
-      <input type="date" id="datetofetch" name="date" />
-      <input type="submit" value="Lấy dữ liệu" onclick="handleDatepicker()" />
-    </form>
-    <div class="container">
-      <canvas
-        id="myChart"
-        style="width: 100%; max-width: 600px; height: 70vh"
-      ></canvas>
-      <div class="data" id="data">
-        <div id="waterused"></div>
-        <div id="estimated"></div>
-      </div>
+    </form><br>
+    <div id="button_container">
+      <button class="w3-bar-item w3-button tablink w3-red" onclick="openTab(event, 'dateview')">Xem ngày</button>
+      <button class="w3-bar-item w3-button tablink" onclick="openTab(event, 'monthview')">Xem tháng</button>
     </div>
-  </body>
-  <script>
-    function tinhTienNuoc(luongNuoc) {
-      var muc1 = 5.973; // đồng/m3 cho 10m3 đầu tiên sử dụng
-      var muc2 = 7.052; // đồng/m3 cho mức sử dụng từ 10 - 20m3
-      var muc3 = 8.669; // đồng/m3 cho mức sử dụng từ 20 - 30m3
-      var muc4 = 15.929; // đồng/m3 cho mức sử dụng từ 30m3 trở lên
+  </div>
+  <div id="dateview" class="w3-container city">
+    <form onclick="return false;" id="datepicker" class="form" style="width: 100%;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div class="datepicker">
+          <label for="date">Lấy dữ liệu của ngày:</label>
+          <div class="date_container">
+            <input type="number" id="numdate" name="date" min="1" max="31" class="w3-button">
+            <input type="number" id="nummonth" name="month" min="1" max="12" class="w3-button">
+            <input type="number" id="numyear" name="year" min="1900" max="3000" class="w3-button">
+          </div>
+        </div>
+        <input type="submit" value="Lấy dữ liệu" onclick="handleDatepicker()" class="w3-button" style="width: 30vw; border: 1px solid black;"/>
+      </div>
+      <div class="container">
+    </form>
+    <canvas id="myChart" style="width: 100%; max-width: 600px; height: 50vh"></canvas>
+    <div class="data" id="data">
+      <div id="waterused"></div>
+      <div id="estimated"></div>
+    </div>
+  </div>
+  </div>
+  <div id="monthview" class="w3-container city" style="display: none;">
+    <h1>monthview-placeholder</h1>
+  </div>
+</body>
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
 
-      var tienNuoc = 0;
-
-      if (luongNuoc <= 10) {
-        tienNuoc = luongNuoc * muc1;
-      } else if (luongNuoc <= 20) {
-        tienNuoc = 10 * muc1 + (luongNuoc - 10) * muc2;
-      } else if (luongNuoc <= 30) {
-        tienNuoc = 10 * muc1 + 10 * muc2 + (luongNuoc - 20) * muc3;
-      } else {
-        tienNuoc = 10 * muc1 + 10 * muc2 + 10 * muc3 + (luongNuoc - 30) * muc4;
-      }
-
-      return tienNuoc;
-    }
-
-    const getData = (date, device_id) => {
-      console.log(date);
-      fetch(`/getdata?date=${date}&deviceid=${device_id}`)
-        .then((data) => {
-          return data.json();
-        })
-        .then((data) => {
-          if (data.error === "true") {
-            alert("Không tìm thấy dữ liệu cho ngày này!");
-            return 0;
-          }
-          const xValues = [];
-          const y1Values = [];
-          const y2Values = [];
-
-          for (let i in data) {
-            var date = new Date(i * 1000); // sec to ms
-            xValues.push(`${date.getHours()}:${date.getMinutes()}`);
-            y1Values.push(Number(data[i]["waterFlowed"]) / 1000);
-            y2Values.push(Number(data[i]["waterSpeed"]) / 1000);
-          }
-          // fill in info
-          const waterused = y1Values.at(-1);
-          document.querySelector(
-            "#waterused"
-          ).textContent = `Số nước tạm tính trong ngày: ${waterused} (m3)`;
-
-          document.querySelector(
-            "#estimated"
-          ).textContent = `Tiền nước tạm tính trong ngày: ${tinhTienNuoc(
-            waterused
-          )} (đồng)`;
-          // make chart
-          new Chart("myChart", {
-            type: "line",
-            data: {
-              labels: xValues,
-              datasets: [
-                {
-                  fill: false,
-                  lineTension: 0,
-                  backgroundColor: "rgba(0,0,255,1.0)",
-                  borderColor: "rgba(0,0,255,0.1)",
-                  data: y1Values,
-                  label: "Số nước (m3)",
-                  color: "rgba(0,0,255,1.0)",
-                },
-                {
-                  fill: false,
-                  lineTension: 0,
-                  backgroundColor: "rgba(0,255,0,1.0)",
-                  borderColor: "rgba(0,0,255,0.1)",
-                  data: y2Values,
-                  label: "Tốc độ dòng chảy (m3/phút)",
-                  color: "rgba(0,255,0,1.0)",
-                },
-              ],
-            },
-            options: {
-              elements: {
-                point: {
-                  radius: 6,
-                  hoverRadius: 5, // ex.: to make it bigger when user hovers put larger number than radius.
-                },
-                line: {
-                  borderWidth: 5,
-                },
-              },
-              legend: { display: true },
-              scales: {
-                yAxes: [{ ticks: {} }],
-              },
-            },
-          });
-        });
-    };
-
-    function formatDate(date) {
-      // Extract day, month, and year from the date object
-      var day = date.getDate();
-      var month = date.getMonth() + 1; // Month is zero-based, so we add 1
-      var year = date.getFullYear();
-
-      // Pad day and month with leading zeros if needed
-      if (day < 10) {
-        day = "0" + day;
-      }
-      if (month < 10) {
-        month = "0" + month;
-      }
-
-      // Concatenate day, month, and year in the desired format
-      var formattedDate = "" + day + month + year;
-
-      return formattedDate;
-    }
-
-    const handleDatepicker = () => {
-      date_elem = document.querySelector("#datetofetch");
-      let device = document.querySelector("#devices").value;
-      if (device == "-") alert("Chọn thiết bị để xem dữ liệu!");
-      else if (date_elem.value === "")
-        alert("Chọn ngày trước khi lấy dữ liệu!");
-      else {
-        const date = new Date(date_elem.value);
-        getData(formatDate(date), device);
-      }
-    };
-  </script>
 </html>

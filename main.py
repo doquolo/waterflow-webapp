@@ -23,7 +23,8 @@ def getUserData():
     try:
         user = firestore.collection("users").document(str(username)).get()
         user = user.to_dict()
-        if (user == None):
+        print(user)
+        if (user == None or user["password"] != str(password)):
             return {"state": "authenticate"}
         elif (user["password"] == str(password)):
             device_list = []
@@ -40,22 +41,19 @@ def home():
 
 @app.route("/getdata")
 def getdata():
-    date = request.args.get('date')
+    timestamp = request.args.get('date')
+    date = timestamp[0:2]
+    month = timestamp[2:4]
+    year = timestamp[4:8]
     device_id = request.args.get('deviceid')
-    ref_path = f"/{device_id}/"
-    all_dates = list(db.reference(ref_path).get().keys())
-    print(all_dates)
-    if (date in all_dates):
-        ref = db.reference(f"{ref_path}{date}")
+    ref_path = f"/{device_id}/{int(year)}/{int(month)}/{int(date)}/"
+    try:
+        ref = db.reference(ref_path)
         data = ref.get()
+        if (data == None): raise ValueError
         return data
-    else:
+    except:
         return {"error": 'true', "reason": 'date not exist'}
-
-@app.route("/testDB")
-def testDB():
-    users = firestore.collection("users").document("noc").get()
-    return users.to_dict()
 
 app.run("0.0.0.0", debug=True)
 
