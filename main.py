@@ -2,6 +2,8 @@ from flask import Flask, render_template, request
 import firebase_admin
 from firebase_admin import db, firestore
 import json
+import uuid
+import datetime
 import argon2
 
 # init firebase
@@ -99,70 +101,118 @@ def getAdmin():
             try:
                 isPasswordCorrect = hasher.verify(user["password"], password)
                 if (isPasswordCorrect):
-                    return {"state": "found"}
+                    return {"state": "found", "sessionid": generateSessionID()}
             except Exception as e:
                 return {"state": "authenticate"}
     except Exception as e:
         return {"e": e}
+    
+# admin needs a session id to get access to admin function
+active_session_id = {}
+active_limit = 1800 # (secs) - 30 (mins) of active time
+def generateSessionID():
+    id = str(uuid.uuid4())
+    timestamp = int(round(datetime.datetime.now().timestamp()))
+    active_session_id[id] = timestamp
+    return id
+
+def verifySessionID(uuid):
+    try:
+        timestamp = active_session_id[uuid]
+        current_ts = int(round(datetime.datetime.now().timestamp()))
+        time_diff = current_ts - timestamp
+        if (time_diff > active_limit):
+            return {"state": "expired"} 
+        else:
+            return {"state": "valid"}
+    except:
+        return {"state": "invalid"}
+
 
 @app.route("/getAllUserData")
 def getAllUserData():
-    userlist = []
-    users = firestore.collection("users").stream()
-    for user in users:
-        userlist.append({
-            'username': user.id,
-            'devices': user.to_dict()['devices']
-        })
-    return userlist
+    sessionid = request.args.get('sessionid')
+    state = verifySessionID(sessionid)
+    if (state["state"] == "expired"): return {"status": "error", "error": "expired"}
+    elif (state["state"] == "invalid"): return {"status": "error", "error": "invalid"}
+    else:
+        userlist = []
+        users = firestore.collection("users").stream()
+        for user in users:
+            userlist.append({
+                'username': user.id,
+                'devices': user.to_dict()['devices']
+            })
+        return userlist
 
 @app.route("/delUser")
 def delUser():
     username = request.args.get('username')
-    try:
-        firestore.collection("users").document(str(username)).delete()
-    except Exception as e:
-        return {"state": "error", "error": e}
-    return {"state": "done"}    
+    sessionid = request.args.get('sessionid')
+    state = verifySessionID(sessionid)
+    if (state["state"] == "expired"): return {"status": "error", "error": "expired"}
+    elif (state["state"] == "invalid"): return {"status": "error", "error": "invalid"}
+    else:
+        try:
+            firestore.collection("users").document(str(username)).delete()
+        except Exception as e:
+            return {"state": "error", "error": e}
+        return {"state": "done"}    
 
 @app.route("/newLink")
 def newLink():
     username = request.args.get('username')
     id = request.args.get('deviceid')
-    try:
-        devicelist = firestore.collection("users").document(username).get().to_dict()['devices']
-        devicelist.append(id)
-        firestore.collection("users").document(username).update({"devices": devicelist})
-    except Exception as e:
-        return {"state": "error", "error": e}
-    return {"state": "done"}    
+    sessionid = request.args.get('sessionid')
+    state = verifySessionID(sessionid)
+    if (state["state"] == "expired"): return {"status": "error", "error": "expired"}
+    elif (state["state"] == "invalid"): return {"status": "error", "error": "invalid"}
+    else:
+        try:
+            devicelist = firestore.collection("users").document(username).get().to_dict()['devices']
+            devicelist.append(id)
+            firestore.collection("users").document(username).update({"devices": devicelist})
+        except Exception as e:
+            return {"state": "error", "error": e}
+        return {"state": "done"}    
 
 @app.route("/unlink")
 def unlink():
     username = request.args.get('username')
     id = request.args.get('deviceid')
-    try:
-        devicelist = firestore.collection("users").document(username).get().to_dict()['devices']
-        devicelist.remove(id)
-        firestore.collection("users").document(username).update({"devices": devicelist})
-    except Exception as e:
-        return {"state": "error", "error": e}
-    return {"state": "done"}    
+    sessionid = request.args.get('sessionid')
+    state = verifySessionID(sessionid)
+    if (state["state"] == "expired"): return {"status": "error", "error": "expired"}
+    elif (state["state"] == "invalid"): return {"status": "error", "error": "invalid"}
+    else:
+        try:
+            devicelist = firestore.collection("users").document(username).get().to_dict()['devices']
+            devicelist.remove(id)
+            firestore.collection("users").document(username).update({"devices": devicelist})
+        except Exception as e:
+            return {"state": "error", "error": e}
+        return {"state": "done"}    
 
 @app.route("/registerNewUser", methods=['POST'])
 def registerNewUser():
+    
     jsondata = json.loads(request.data)
 
     username = jsondata["user"]
     hash = jsondata["hash"]
-    try:
-        firestore.collection("users").document(str(username)).set({
-            "devices": [],
-            "password": str(hash)
-        })
-    except Exception as e:
-        return {"state": "error", "error": e}
-    return {"state": "done"}    
+    sessionid = request.args.get('sessionid')
+    state = verifySessionID(sessionid)
+    if (state["state"] == "expired"): return {"status": "error", "error": "expired"}
+    elif (state["state"] == "invalid"): return {"status": "error", "error": "invalid"}
+    else:
+        try:
+            firestore.collection("users").document(str(username)).set({
+                "devices": [],
+                "password": str(hash)
+            })
+        except Exception as e:
+            return {"state": "error", "error": e}
+        return {"state": "done"}    
 
 if __name__ == "__main__":
     app.run("0.0.0.0", debug=True)

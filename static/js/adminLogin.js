@@ -18,13 +18,14 @@ const checker = () => {
           password = prompt("Nhập lại password");
           checker();
         } else if (data.state === "found") {
+          sessionid = data.sessionid;
           return true;
         } else {
           alert(`Hệ thống lỗi: ${data.e}`);
         }
       })
-      .then((repeat) => {
-        if (repeat) {
+      .then((state) => {
+        if (state) {
             alert("Đăng nhập thành công!");
             const welcome_text = document.querySelector("#welcome_text");
 
@@ -36,5 +37,7 @@ const checker = () => {
 // login
 let username = prompt("Username");
 let password = prompt("Password");
+
+let sessionid = "";
 
 checker();
