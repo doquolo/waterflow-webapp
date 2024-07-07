@@ -1,5 +1,5 @@
 const checker = () => {
-    fetch("/getUserData", {
+    fetch("/getAdminData", {
       method: "POST",
       body: JSON.stringify({
         user: username,
@@ -17,13 +17,7 @@ const checker = () => {
           username = prompt("Nhập lại username:");
           password = prompt("Nhập lại password");
           checker();
-        } else if (data.state === "notfound") {
-          state = true;
-          return true;
         } else if (data.state === "found") {
-          state = true;
-          isMachineAvail = true;
-          data_json = request;
           return true;
         } else {
           alert(`Hệ thống lỗi: ${data.e}`);
@@ -31,20 +25,10 @@ const checker = () => {
       })
       .then((repeat) => {
         if (repeat) {
-          console.log(data, state, isMachineAvail);
-          if (state && !isMachineAvail) {
-            alert("Không có thiết bị nào liên kết với tài khoản của bạn!");
-          } else if (state) {
             alert("Đăng nhập thành công!");
             const welcome_text = document.querySelector("#welcome_text");
-            const dropdown = document.querySelector("#devices");
 
-            welcome_text.textContent = `Xin chào, ${username}`;
-            for (let i in data_json.data.machines) {
-              dropdown.innerHTML += 
-                `<option value="${data_json.data.machines[i]}">${data_json.data.machines[i]}</option>`;
-            }
-          }
+            welcome_text.textContent = `Xin chào quản trị viên, ${username}`;
         }
       });
   };
@@ -52,9 +36,5 @@ const checker = () => {
 // login
 let username = prompt("Username");
 let password = prompt("Password");
-
-let state = false;
-let isMachineAvail = false;
-let data_json = null;
 
 checker();

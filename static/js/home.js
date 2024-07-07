@@ -16,12 +16,12 @@ function tinhTienNuoc(luongNuoc) {
     tienNuoc = 10 * muc1 + 10 * muc2 + 10 * muc3 + (luongNuoc - 30) * muc4;
   }
 
-  return tienNuoc;
+  return new Intl.NumberFormat('vi-vn').format(Math.ceil(tienNuoc*1000),);
 }
 
 const getData = (date, device_id) => {
   console.log(date);
-  fetch(`/getdata?date=${date}&deviceid=${device_id}`)
+  fetch(`/getData?date=${date}&deviceid=${device_id}`)
     .then((data) => {
       return data.json();
     })
@@ -50,7 +50,7 @@ const getData = (date, device_id) => {
         "#data > #estimated"
       ).textContent = `Tiền nước tạm tính trong ngày: ${tinhTienNuoc(
         waterused
-      ).toFixed(2)} (đồng)`;
+      )} (đồng)`;
       // make chart
       new Chart("dateChart", {
         type: "line",
@@ -171,7 +171,7 @@ const getMonthData = (date, device_id) => {
         "#monthdata > #estimated"
       ).textContent = `Tiền nước tạm tính trong tháng: ${tinhTienNuoc(
         waterused
-      ).toFixed(2)} (đồng)`;
+      )} (đồng)`;
       // make chart
       new Chart("monthChart", {
         type: "line",

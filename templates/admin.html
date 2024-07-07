@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WaterFlow | Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/argon2-browser@1.18.0/dist/argon2-bundled.min.js"></script>
+    <script src="{{ url_for('static', filename='js/adminLogin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tabbed-home.js') }}"></script>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles/admin.css') }}"
+    />
+  </head>
+  <body>
+    <div class="w3-bar w3-black">
+      <p id="welcome_text"></p>
+      <div id="button_container">
+        <button
+          class="w3-bar-item w3-button tablink w3-red"
+          onclick="openTab(event, 'manageUser')"
+        >
+          Quản lý người dùng
+        </button>
+      </div>
+    </div>
+    <div id="manageUser" class="w3-container tab">
+        <div class="userList">
+            <div class="w3-button action" style="margin: 1rem 0rem;" onclick="createNewUser()">Tạo người dùng mới</div>
+        </div>
+    </div>
+  </body>
+</html>

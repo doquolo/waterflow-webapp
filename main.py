@@ -16,9 +16,13 @@ hasher = argon2.PasswordHasher()
 # init flask
 app = Flask(__name__)
 
+# home
+@app.route("/")
+def home():
+    return render_template("index.html")
+
 @app.route("/getUserData", methods=["POST"])
 def getUserData():
-
     jsondata = json.loads(request.data)
 
     username = jsondata["user"]
@@ -27,6 +31,7 @@ def getUserData():
     try:
         user = firestore.collection("users").document(str(username)).get()
         user = user.to_dict()
+        print(user)
         if (user == None): return {"state": "authenticate"}
         else:
             try:
@@ -42,11 +47,7 @@ def getUserData():
     except Exception as e:
         return {"e": e}
 
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-@app.route("/getdata")
+@app.route("/getData")
 def getdata():
     timestamp = request.args.get('date')
     date = timestamp[0:2]
@@ -76,6 +77,92 @@ def getMonthData():
         return data
     except:
         return {"error": 'true', "reason": 'date not exist'}
+    
+
+# admin
+@app.route("/admin")
+def adminPanel():
+    return render_template("admin.html")
+
+@app.route("/getAdminData", methods=["POST"])
+def getAdmin():
+    jsondata = json.loads(request.data)
+
+    username = jsondata["user"]
+    password = jsondata["password"]
+
+    try:
+        user = firestore.collection("admins").document(str(username)).get()
+        user = user.to_dict()
+        if (user == None): return {"state": "authenticate"}
+        else:
+            try:
+                isPasswordCorrect = hasher.verify(user["password"], password)
+                if (isPasswordCorrect):
+                    return {"state": "found"}
+            except Exception as e:
+                return {"state": "authenticate"}
+    except Exception as e:
+        return {"e": e}
+
+@app.route("/getAllUserData")
+def getAllUserData():
+    userlist = []
+    users = firestore.collection("users").stream()
+    for user in users:
+        userlist.append({
+            'username': user.id,
+            'devices': user.to_dict()['devices']
+        })
+    return userlist
+
+@app.route("/delUser")
+def delUser():
+    username = request.args.get('username')
+    try:
+        firestore.collection("users").document(str(username)).delete()
+    except Exception as e:
+        return {"state": "error", "error": e}
+    return {"state": "done"}    
+
+@app.route("/newLink")
+def newLink():
+    username = request.args.get('username')
+    id = request.args.get('deviceid')
+    try:
+        devicelist = firestore.collection("users").document(username).get().to_dict()['devices']
+        devicelist.append(id)
+        firestore.collection("users").document(username).update({"devices": devicelist})
+    except Exception as e:
+        return {"state": "error", "error": e}
+    return {"state": "done"}    
+
+@app.route("/unlink")
+def unlink():
+    username = request.args.get('username')
+    id = request.args.get('deviceid')
+    try:
+        devicelist = firestore.collection("users").document(username).get().to_dict()['devices']
+        devicelist.remove(id)
+        firestore.collection("users").document(username).update({"devices": devicelist})
+    except Exception as e:
+        return {"state": "error", "error": e}
+    return {"state": "done"}    
+
+@app.route("/registerNewUser", methods=['POST'])
+def registerNewUser():
+    jsondata = json.loads(request.data)
+
+    username = jsondata["user"]
+    hash = jsondata["hash"]
+    try:
+        firestore.collection("users").document(str(username)).set({
+            "devices": [],
+            "password": str(hash)
+        })
+    except Exception as e:
+        return {"state": "error", "error": e}
+    return {"state": "done"}    
 
 if __name__ == "__main__":
     app.run("0.0.0.0", debug=True)
