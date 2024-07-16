@@ -121,19 +121,15 @@ function formatDate(date, style='date') {
 }
 
 const handleDatepicker = () => {
-  numdate = document.querySelector("#numdate");
-  nummonth = document.querySelector("#nummonth");
-  numyear = document.querySelector("#numyear");
+  let numdate = document.querySelector("#numdate");
+  let nummonth = document.querySelector("#nummonth");
+  let numyear = document.querySelector("#numyear");
   let device = document.querySelector("#devices").value;
   if (device == "-") alert("Chọn thiết bị để xem dữ liệu!");
   else if (numyear.value == "" || nummonth.value == "" || numdate.value == "")
     alert("Chọn ngày trước khi lấy dữ liệu!");
   else {
-    const date = new Date(
-      `${Number(numyear.value)},${Number(nummonth.value)},${Number(
-        numdate.value
-      )}`
-    );
+    const date = new Date(Number(numyear.value), Number(nummonth.value)-1, Number(numdate.value), 1 ,1, 1, 1);
     getData(formatDate(date), device);
   }
 };
@@ -209,16 +205,14 @@ const getMonthData = (date, device_id) => {
 };
 
 const handleMonthPicker = () => {
-  nummonth = document.querySelector("#monthPicker > #nummonth");
-  numyear = document.querySelector("#monthPicker > #numyear");
+  let nummonth = document.querySelector("#monthPicker > #nummonth");
+  let numyear = document.querySelector("#monthPicker > #numyear");
   let device = document.querySelector("#devices").value;
   if (device == "-") alert("Chọn thiết bị để xem dữ liệu!");
   else if (numyear.value == "" || nummonth.value == "")
     alert("Chọn tháng trước khi lấy dữ liệu!");
   else {
-    const date = new Date(
-      `${Number(numyear.value)},${Number(nummonth.value)}`
-    );
+    const date = new Date(Number(numyear.value), Number(nummonth.value)-1, 1, 1 ,1, 1, 1);
     getMonthData(formatDate(date, style='month'), device);
   }
 };
